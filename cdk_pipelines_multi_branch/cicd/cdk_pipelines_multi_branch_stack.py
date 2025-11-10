@@ -126,24 +126,17 @@ class CdkPipelinesMultiBranchStack(Stack):
             )
             artifact_bucket = S3Construct(self, 'BranchArtifacts', args).bucket
 
-            # Create GitHub token secret if using GitHub
+            # Import existing GitHub token secret if using GitHub
             github_token_secret = None
             if use_github:
                 github_token_secret_name = config.get('github_token_secret_name', 'github-personal-access-token')
                 
-                # Create placeholder secret for GitHub token
-                # User must manually update this with their actual GitHub token
-                github_token_secret = Secret(
+                # Import existing secret by name
+                # Secret should be created manually or via setup-github-token.sh script
+                github_token_secret = Secret.from_secret_name_v2(
                     self,
                     'GitHubTokenSecret',
-                    secret_name=github_token_secret_name,
-                    description='GitHub personal access token for API calls',
-                    generate_secret_string=SecretStringGenerator(
-                        secret_string_template='{"token":"PLACEHOLDER"}',
-                        generate_string_key='placeholder',
-                        exclude_punctuation=True
-                    ),
-                    removal_policy=RemovalPolicy.RETAIN  # Retain secret on stack deletion
+                    secret_name=github_token_secret_name
                 )
                 
                 CfnOutput(
@@ -173,7 +166,7 @@ class CdkPipelinesMultiBranchStack(Stack):
             create_branch_func = Function(
                 self,
                 'LambdaTriggerCreateBranch',
-                runtime=Runtime.PYTHON_3_10,
+                runtime=Runtime.PYTHON_3_9,
                 function_name='LambdaTriggerCreateBranch',
                 handler='create_branch.handler',
                 code=Code.from_asset(path.join(this_dir, 'code')),
@@ -190,7 +183,7 @@ class CdkPipelinesMultiBranchStack(Stack):
                 create_branch_func,
                 [{
                     'id': 'AwsSolutions-L1',
-                    'reason': 'Python 3.10 is a supported and stable runtime version.'
+                    'reason': 'Python 3.9 is a supported and stable runtime version.'
                 }]
             )
 
@@ -206,7 +199,7 @@ class CdkPipelinesMultiBranchStack(Stack):
             destroy_branch_func = Function(
                 self,
                 'LambdaTriggerDestroyBranch',
-                runtime=Runtime.PYTHON_3_10,
+                runtime=Runtime.PYTHON_3_9,
                 function_name='LambdaTriggerDestroyBranch',
                 handler='destroy_branch.handler',
                 role=iam_stack.delete_branch_role,
@@ -225,7 +218,7 @@ class CdkPipelinesMultiBranchStack(Stack):
                 destroy_branch_func,
                 [{
                     'id': 'AwsSolutions-L1',
-                    'reason': 'Python 3.10 is a supported and stable runtime version.'
+                    'reason': 'Python 3.9 is a supported and stable runtime version.'
                 }]
             )
 

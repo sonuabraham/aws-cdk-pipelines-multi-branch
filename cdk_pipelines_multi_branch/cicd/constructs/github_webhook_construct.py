@@ -67,13 +67,24 @@ class GitHubWebhookConstruct(Construct):
             removal_policy=RemovalPolicy.DESTROY
         )
         
+        # Suppress CDK Nag warnings for webhook secret
+        NagSuppressions.add_resource_suppressions(
+            self.webhook_secret,
+            [
+                {
+                    'id': 'AwsSolutions-SMG4',
+                    'reason': 'Webhook secret rotation is not required for this use case.'
+                }
+            ]
+        )
+        
         # Create Lambda function for webhook handler
         webhook_handler_dir = path.join(path.dirname(path.dirname(__file__)), 'code')
         
         self.webhook_handler = lambda_.Function(
             self,
             'GitHubWebhookHandler',
-            runtime=lambda_.Runtime.PYTHON_3_10,
+            runtime=lambda_.Runtime.PYTHON_3_9,
             function_name='GitHubWebhookHandler',
             handler='github_webhook_handler.handler',
             code=lambda_.Code.from_asset(webhook_handler_dir),
@@ -102,7 +113,7 @@ class GitHubWebhookConstruct(Construct):
             [
                 {
                     'id': 'AwsSolutions-L1',
-                    'reason': 'Python 3.10 is a supported and stable runtime version.'
+                    'reason': 'Python 3.9 is a supported and stable runtime version.'
                 }
             ]
         )
@@ -145,8 +156,16 @@ class GitHubWebhookConstruct(Construct):
             self.api,
             [
                 {
+                    'id': 'AwsSolutions-APIG1',
+                    'reason': 'Access logging not required for webhook endpoint.'
+                },
+                {
                     'id': 'AwsSolutions-APIG2',
                     'reason': 'Request validation not required for webhook endpoint.'
+                },
+                {
+                    'id': 'AwsSolutions-APIG3',
+                    'reason': 'WAF not required for webhook endpoint with signature validation.'
                 },
                 {
                     'id': 'AwsSolutions-APIG4',

@@ -45,6 +45,7 @@ if [[ -n "$github_owner" && -n "$github_repo" ]]; then
         GITHUB_TOKEN=$(aws secretsmanager get-secret-value \
             --secret-id "$github_token_secret_name" \
             --region "$region" \
+            --profile "$dev_profile_name" \
             --query 'SecretString' \
             --output text 2>/dev/null)
         
@@ -62,6 +63,13 @@ if [[ -n "$github_owner" && -n "$github_repo" ]]; then
     
     # Call GitHub API to get default branch
     echo "Fetching default branch from GitHub API..."
+    
+    # Ensure curl is available
+    if ! command -v curl &> /dev/null; then
+        echo "Error: curl is not installed or not in PATH"
+        exit 1
+    fi
+    
     if [[ -n "$GITHUB_TOKEN" ]]; then
         GITHUB_RESPONSE=$(curl -s -w "\n%{http_code}" \
             -H "Authorization: token $GITHUB_TOKEN" \
@@ -108,9 +116,14 @@ if [[ -n "$github_owner" && -n "$github_repo" ]]; then
         echo "Please check the repository name and access permissions."
         exit 1
     else
-        echo "Error: GitHub API request failed with HTTP status $HTTP_CODE"
+        echo "Warning: GitHub API request failed with HTTP status $HTTP_CODE"
         echo "Response: $RESPONSE_BODY"
-        exit 1
+        echo ""
+        echo "Falling back to default branch 'main'"
+        echo "If your repository uses a different default branch, please set it manually:"
+        echo "  export BRANCH=your-branch-name"
+        echo "  cdk deploy cdk-pipelines-multi-branch-\$BRANCH"
+        export BRANCH="main"
     fi
     
 elif [[ -n "$repository_name" ]]; then
