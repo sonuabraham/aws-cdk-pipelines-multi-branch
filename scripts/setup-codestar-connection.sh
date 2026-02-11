@@ -7,7 +7,7 @@ set -e
 
 # Default values
 CONNECTION_NAME="github-connection"
-REGION="ap-southeast-2"
+REGION="us-east-1"
 
 # Parse command line arguments
 while [ $# -gt 0 ]; do
