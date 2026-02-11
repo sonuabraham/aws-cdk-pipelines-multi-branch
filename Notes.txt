@@ -1,1 +1,1 @@
-./initial-deploy.sh --dev_account_id 104612892635  --dev_profile_name default --prod_account_id 104612892635 --prod_profile_name default
+./initial-deploy.sh --dev_account_id 104612892635  --dev_profile_name sonuabraham --prod_account_id 104612892635 --prod_profile_name sonuabraham
